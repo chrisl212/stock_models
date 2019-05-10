@@ -16,9 +16,15 @@ def rsi(data):
         opens = data[0][i:i+14]
         closes = data[1][i:i+14]
         change = closes - opens
-        gains = sum(change[change > 0])/change[change > 0].shape[0]
-        losses = abs(sum(change[change < 0]))/change[change < 0].shape[0]
-        strength[i] = 100 * (1 - 1/(1 + gains/losses))
+        if change[change > 0].shape[0] == 0:
+            gains = 0
+        else:
+            gains = np.mean(change[change > 0])
+        if change[change <= 0].shape[0] == 0:
+            strength[i] = 100
+        else:
+            losses = np.abs(np.mean(change[change <= 0]))
+            strength[i] = 100 * (1 - 1/(1 + gains/losses))
     return strength
 
 def stoch(data):
@@ -55,4 +61,16 @@ def proc(data, n):
     ret = np.zeros(data.shape[0]-n)
     for i in np.arange(0, ret.shape[0]):
         ret[i] = (data[i+n] - data[i])/data[i]
+    return ret
+
+def obv(data):
+    ret = np.zeros(data[4].shape)
+    ret[0] = data[4][0]
+    for i in np.arange(1, ret.shape[0]):
+        if data[1][i] > data[1][i-1]:
+            ret[i] = ret[i-1] + data[4][i]
+        elif data[1][i] < data[1][i-1]:
+            ret[i] = ret[i-1] - data[4][i]
+        else:
+            ret[i] = ret[i-1]
     return ret
